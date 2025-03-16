@@ -8,9 +8,12 @@ class Player:
     def __init__(self, pos):
         self.pos = pos
         self.size = 22  # Size of the character (width and height)
-        self.speed = constants.PLAYER_SPEED
+        self.speed = constants.PLAYER_SPEED # current speed
         self.on_ground = False
         self.vel = Vector(0, 0)
+
+        self.default_speed = constants.DEFAULT_PLAYER_SPEED  # Save default speed
+
 
     def draw(self, canvas):
         # Draw a rectangle representing the character
@@ -44,3 +47,16 @@ class Player:
 
         if jump and self.on_ground:  # only when on ground can character jump
             self.vel.y = constants.JUMP_POWER
+
+    def reset_speed(self, speed):
+        # Reset the player's speed to the default value
+        self.speed = self.default_speed
+        #self.jump_power = self.default_jump
+
+
+
+
+
+
+# Example usage
+player = Player(Vector(100, 100))
