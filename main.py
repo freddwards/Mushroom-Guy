@@ -52,7 +52,6 @@ class Game:
     def update(self):
         # call move method for player based on player inputs
         self.screen_scroll = self.player.move(self.left, self.right, self.jump)  # takes output for moving screen
-        print(self.screen_scroll)
 
         # checking if the player is in contact with the moss
         on_moss = False
