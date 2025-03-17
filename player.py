@@ -7,13 +7,12 @@ FLOOR = constants.SCREEN_HEIGHT - 11  # temp before map is added
 class Player:
     def __init__(self, pos):
         self.pos = pos
-        self.size = 22  # Size of the character (width and height)
-        self.speed = constants.PLAYER_SPEED # current speed
+        self.size = constants.TILE_SIZE  # Size of the character (width and height) same as tile for consistency
+        self.speed = constants.PLAYER_SPEED  # current speed
         self.on_ground = False
         self.vel = Vector(0, 0)
 
         self.default_speed = constants.DEFAULT_PLAYER_SPEED  # Save default speed
-
 
     def draw(self, canvas):
         # Draw a rectangle representing the character
@@ -26,6 +25,7 @@ class Player:
         ], 1, "Black", "Red")
 
     def move(self, left, right, jump):
+        screen_scroll = [0, 0]
         self.vel.y += constants.GRAVITY
         self.pos.add(self.vel)
 
@@ -48,14 +48,28 @@ class Player:
         if jump and self.on_ground:  # only when on ground can character jump
             self.vel.y = constants.JUMP_POWER
 
-    def reset_speed(self, speed):
+        # adjusting screen scroll based on player's position
+        if self.pos.x > (constants.SCREEN_WIDTH - constants.SCROLL_THRESH):  # check right side
+            screen_scroll[0] = (constants.SCREEN_WIDTH - constants.SCROLL_THRESH) - self.pos.x
+            self.pos.x = constants.SCREEN_WIDTH - constants.SCROLL_THRESH  # stop player moving when near right edge
+
+        if self.pos.x < constants.SCROLL_THRESH:  # check left side
+            screen_scroll[0] = constants.SCROLL_THRESH - self.pos.x
+            self.pos.x = constants.SCROLL_THRESH  # stop player moving when near left edge
+
+        # if self.pos.y > (constants.SCREEN_HEIGHT - constants.SCROLL_THRESH):  # check bottom # temp removed to stop player endless falling
+        #     screen_scroll[1] = (constants.SCREEN_HEIGHT - constants.SCROLL_THRESH) - self.pos.y
+        #     self.pos.y = constants.SCREEN_HEIGHT - constants.SCROLL_THRESH  # stop player moving when near bottom
+
+        if self.pos.y < constants.SCROLL_THRESH:  # check top
+            screen_scroll[1] = constants.SCROLL_THRESH - self.pos.y
+            self.pos.y = constants.SCROLL_THRESH  # stop player moving when near top
+
+        return screen_scroll
+
+    def reset_speed(self):
         # Reset the player's speed to the default value
         self.speed = self.default_speed
-        #self.jump_power = self.default_jump
-
-
-
-
 
 
 # Example usage
