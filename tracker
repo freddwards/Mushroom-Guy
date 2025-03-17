@@ -1,14 +1,15 @@
 Fred -
 
 - hours worked:
-5
-
+7
 - milestones achieved -
 organisation of project
 basic code setup w/kai
 basic player creation w/kai
 player movement
 finding and photoshopping sprite sheet for tile map
+creation of level class
+loading and drawing tiles on the screen
 
 Kai -
 
