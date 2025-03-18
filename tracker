@@ -36,8 +36,9 @@ Created the sticky moss enemy
 Jasleen -
 
 - hours worked:
-1
+5
 
 - milestones achieved -
 basic health bar that decreases using a button for now
+instead of health bar i did 3 lives, each life is lost when player in contact with moss
 
