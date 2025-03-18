@@ -7,7 +7,6 @@ from moss import Moss
 
 import constants
 
-
 class Game:
     def __init__(self):
         self.running = True
@@ -16,6 +15,7 @@ class Game:
         self.right = False
         self.left = False
         self.jump = False
+        self.damaged_cooldown = 0  # Prevents continuous damage
 
         # declaring player object
         self.player = Player(Vector(200, 150))
@@ -27,8 +27,6 @@ class Game:
              Moss(Vector(50, 600),10,100 ),
              Moss(Vector(500, 600),10 , 50 )
         ]
-
-
 
     def draw(self, canvas):
         self.player.draw(canvas)
@@ -53,9 +51,13 @@ class Game:
         if on_moss:
             self.player.vel.x *= constants.SLOW_FACTOR  # Reduce horizontal velocity
             self.player.vel.y *= constants.SLOW_FACTOR  # Reduce vertical velocity (optional)
+            if self.damaged_cooldown == 0:  #Prevents immediate life loss
+                self.damaged_player()
+                self.damaged_cooldown = 180  #A delay before next damage
 
-
-
+        #Decrease cooldown timer
+        if self.damaged_cooldown > 0:
+            self.damaged_cooldown -= 1
 
     def keyDown(self, key):  # taking inputs from the player
         if key == simplegui.KEY_MAP['d']:
@@ -73,11 +75,13 @@ class Game:
         elif key == simplegui.KEY_MAP['w']:
             self.jump = False
 
+    def damaged_player(self):
+        self.player.health.life_lost()
+
 
 frame = simplegui.create_frame("Mushroom Guy", constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT)
 game = Game()
 frame.set_draw_handler(game.draw)
 frame.set_keydown_handler(game.keyDown)
 frame.set_keyup_handler(game.keyUp)
-
 frame.start()
