@@ -20,7 +20,7 @@ class Game:
         self.damaged_cooldown = 0  # Prevents continuous damage
         
         # declaring player object
-        self.player = Player(Vector(200, 150))
+        self.player = Player(Vector(15, 150))
 
         # declaring several moss objects
         self.moss = [
