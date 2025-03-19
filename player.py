@@ -53,6 +53,7 @@ class Player:
         self.vel = Vector(0, 0)
         self.default_speed = constants.DEFAULT_PLAYER_SPEED  # Save default speed
         self.health = Health(constants.LIVES)    # Initialize health with 3 hearts
+        self.on_moss = False
 
     def draw(self, canvas):
         # Draw a rectangle representing the character
@@ -84,17 +85,31 @@ class Player:
         else:
             self.on_ground = False
 
+
+
         if self.vel.y > constants.TERMINAL_VELOCITY:
             self.vel.y = constants.TERMINAL_VELOCITY
         self.pos.add(self.vel)
 
         # updating character x coords based on player inputs
+
         vel_x = 0
         if right:
             vel_x = constants.PLAYER_SPEED
         if left:
             vel_x = -constants.PLAYER_SPEED
         self.vel.x = vel_x
+
+        # reducing the height
+        # not working right now
+        # if jump and (self.on_ground or self.on_block):
+        #     #print(f"jumping{self.on_moss}")
+        #     if self.on_moss:
+        #         # print (self.vel.y)
+        #         self.vel.y = constants.JUMP_POWER * 0.1
+        #         # print(self.vel.y)
+        #     else:
+        #         self.vel.y = constants.JUMP_POWER
 
         # adjusting screen scroll based on player's position
         if self.pos.x > (constants.SCREEN_WIDTH - constants.SCROLL_THRESH):  # check right side

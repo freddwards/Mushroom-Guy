@@ -54,19 +54,22 @@ class Game:
         self.loadLevel()
 
     def draw(self, canvas):
+        if self.player.health.current_health > 0:
+            self.interaction.check_and_handle_collisions()
 
-        self.interaction.check_and_handle_collisions()
+            self.player.draw(canvas)
 
-        self.player.draw(canvas)
+            # drawing the moss objects
+            for moss in self.moss:
+                moss.draw(canvas)
 
-        # drawing the moss objects
-        for moss in self.moss:
-            moss.draw(canvas)
+            for block in self.blocks:
+                block.draw(canvas)
 
-        for block in self.blocks:
-            block.draw(canvas)
-
-        self.update()
+            self.update()
+        else:
+            canvas.draw_text("GAME OVER", (constants.SCREEN_WIDTH // 2 - 100, constants.SCREEN_HEIGHT // 2),
+                             40, "Red", "sans-serif")
 
     def update(self):
         # call move method for player based on player inputs
@@ -77,11 +80,15 @@ class Game:
         for moss in self.moss:
             if moss.is_player_on_moss(self.player):
                 on_moss = True
+
                 break
+        self.player.on_moss = on_moss
 
         if on_moss:
+
             self.player.vel.x *= constants.SLOW_FACTOR  # Reduce horizontal velocity
             self.player.vel.y *= constants.SLOW_FACTOR  # Reduce vertical velocity (optional)
+
             if self.damaged_cooldown == 0:  #Prevents immediate life loss
                 self.damaged_player()
                 self.damaged_cooldown = 180  #A delay before next damage
@@ -145,11 +152,11 @@ class Interaction:
                 if self.game.player.is_on_block(block):
                     self.game.player.on_block = True  # player is on top of the block
 
-    #def handle_moss_collisions(self):
+    def handle_moss_collisions(self):
 
-    #    for moss in self.game.moss:
-    #        if moss.is_player_on_moss(self.game.player):
-    #            self.game.player.on_moss = True
+       for moss in self.game.moss:
+           if moss.is_player_on_moss(self.game.player):
+               self.game.player.on_moss = True
 
     def is_colliding_with_block(self, player, block):
 
