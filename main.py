@@ -1,9 +1,11 @@
 import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
 import os
 import csv
+import math
 
 from vector import Vector
 from player import Player
+from level import Block
 from moss import Moss
 
 import constants
@@ -18,9 +20,13 @@ class Game:
         self.left = False
         self.jump = False
         self.damaged_cooldown = 0  # Prevents continuous damage
+        self.blocks = []
+        self.moss = []
         
         # declaring player object
         self.player = Player(Vector(15, 150))
+
+        self.interaction = Interaction(self)
 
         # declaring several moss objects
         self.moss = [
@@ -28,6 +34,12 @@ class Game:
             Moss(Vector(200, 600), 10, 200),
             Moss(Vector(50, 600), 10, 100),
             Moss(Vector(500, 600), 10, 50)
+        ]
+
+        self.blocks = [
+            Block((500,500)),
+            Block((200,400)),
+            Block((300,300)),
         ]
 
         # Initialize tile_list and world_data
@@ -42,11 +54,17 @@ class Game:
         self.loadLevel()
 
     def draw(self, canvas):
+
+        self.interaction.check_and_handle_collisions()
+
         self.player.draw(canvas)
 
         # drawing the moss objects
         for moss in self.moss:
             moss.draw(canvas)
+
+        for block in self.blocks:
+            block.draw(canvas)
 
         self.update()
 
@@ -108,6 +126,73 @@ class Game:
             for x, row in enumerate(reader):
                 for y, tile in enumerate(row):
                     self.world_data[x][y] = int(tile)
+
+class Interaction:
+    def __init__(self, game):
+        self.game = game
+
+    def check_and_handle_collisions(self):
+
+        self.handle_block_collisions()
+        #self.handle_moss_collisions()
+
+    def handle_block_collisions(self):
+
+        self.game.player.on_block = False  # assume the player is not on the block
+        for block in self.game.blocks:
+            if self.is_colliding_with_block(self.game.player, block):
+                self.resolve_block_collision(self.game.player, block)
+                if self.game.player.is_on_block(block):
+                    self.game.player.on_block = True  # player is on top of the block
+
+    #def handle_moss_collisions(self):
+
+    #    for moss in self.game.moss:
+    #        if moss.is_player_on_moss(self.game.player):
+    #            self.game.player.on_moss = True
+
+    def is_colliding_with_block(self, player, block):
+
+        player_left = player.pos.x - player.size[0] / 2
+        player_right = player.pos.x + player.size[0] / 2
+        player_top = player.pos.y - player.size[1] / 2
+        player_bottom = player.pos.y + player.size[1] / 2
+
+        block_left = block.center[0] - block.size[0] / 2
+        block_right = block.center[0] + block.size[0] / 2
+        block_top = block.center[1] - block.size[1] / 2
+        block_bottom = block.center[1] + block.size[1] / 2
+
+        # check for collision
+        return (player_right > block_left and player_left < block_right and player_bottom > (block_top) and player_top < block_bottom)
+
+    def resolve_block_collision(self, player, block):
+
+        # calculate overlap in x and y
+        overlap_x = min(
+            abs(player.pos.x + player.size[0] / 2 - (block.center[0] - block.size[0] / 2)),
+            abs(player.pos.x - player.size[0] / 2 - (block.center[0] + block.size[0] / 2))
+        )
+        overlap_y = min(
+            abs(player.pos.y + player.size[1] / 2 - (block.center[1] - block.size[1] / 2)),
+            abs(player.pos.y - player.size[1] / 2 - (block.center[1] + block.size[1] / 2))
+        )
+
+        # resolve collision based on overlap
+        if overlap_x < overlap_y:
+            # horizontal collision
+            if player.pos.x < block.center[0]:
+                player.pos.x = block.center[0] - block.size[0] / 2 - player.size[0] / 2
+            else:
+                player.pos.x = block.center[0] + block.size[0] / 2 + player.size[0] / 2
+            player.vel.x = 0
+        else:
+            # vertical collision
+            if player.pos.y < block.center[1]:
+                player.pos.y = block.center[1] - block.size[1] / 2 - player.size[1] / 2
+            else:
+                player.pos.y = block.center[1] + block.size[1] / 2 + player.size[1] / 2
+                player.vel.y = 0
 
 
 frame = simplegui.create_frame("Mushroom Guy", constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT)

@@ -30,7 +30,7 @@ class Moss:
     def is_player_on_moss (self,player):
         # checking is the player is near the moss
         if (self.pos.x<player.pos.x< self.pos.x+self.width):
-            if (self.pos.y - self.height <=  player.pos.y + player.size // 2 <= self.pos.y):
+            if (self.pos.y - self.height <=  player.pos.y + player.size[1] // 2 <= self.pos.y):
                 return True
         return False
 

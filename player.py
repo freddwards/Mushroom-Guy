@@ -1,5 +1,7 @@
+import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
 import constants
 from vector import Vector
+import math
 
 FLOOR = constants.SCREEN_HEIGHT - 11  # temp before map is added
 
@@ -44,9 +46,10 @@ class Health:
 class Player:
     def __init__(self, pos):
         self.pos = pos
-        self.size = constants.TILE_SIZE  # Size of the character (width and height) same as tile for consistency
+        self.size = (constants.TILE_SIZE, constants.TILE_SIZE)  # Size of the character (width and height) same as tile for consistency
         self.speed = constants.PLAYER_SPEED  # current speed
         self.on_ground = False
+        self.on_block = False
         self.vel = Vector(0, 0)
         self.default_speed = constants.DEFAULT_PLAYER_SPEED  # Save default speed
         self.health = Health(constants.LIVES)    # Initialize health with 3 hearts
@@ -55,10 +58,10 @@ class Player:
         # Draw a rectangle representing the character
         canvas.draw_polygon([
             # drawing a polygon with the character's position and size
-            (self.pos.x - self.size / 2, self.pos.y - self.size / 2),
-            (self.pos.x + self.size / 2, self.pos.y - self.size / 2),
-            (self.pos.x + self.size / 2, self.pos.y + self.size / 2),
-            (self.pos.x - self.size / 2, self.pos.y + self.size / 2)
+            (self.pos.x - self.size[0] / 2, self.pos.y - self.size[1] / 2),
+            (self.pos.x + self.size[0] / 2, self.pos.y - self.size[1] / 2),
+            (self.pos.x + self.size[0] / 2, self.pos.y + self.size[1] / 2),
+            (self.pos.x - self.size[0] / 2, self.pos.y + self.size[1] / 2)
         ], 1, "Black", "Red")
 
         #Draws the player's health
@@ -66,8 +69,12 @@ class Player:
 
     def move(self, left, right, jump):
         screen_scroll = [0, 0]
-        self.vel.y += constants.GRAVITY
-        self.pos.add(self.vel)
+        if (self.on_ground or self.on_block) == False:
+            self.vel.y += constants.GRAVITY
+        elif jump and (self.on_ground or self.on_block):  # only when on ground can character jump
+            self.vel.y = constants.JUMP_POWER
+        else:
+            self.vel.y = 0
 
         # preventing character from falling forever
         if self.pos.y >= FLOOR:
@@ -77,6 +84,10 @@ class Player:
         else:
             self.on_ground = False
 
+        if self.vel.y > constants.TERMINAL_VELOCITY:
+            self.vel.y = constants.TERMINAL_VELOCITY
+        self.pos.add(self.vel)
+
         # updating character x coords based on player inputs
         vel_x = 0
         if right:
@@ -84,9 +95,6 @@ class Player:
         if left:
             vel_x = -constants.PLAYER_SPEED
         self.vel.x = vel_x
-
-        if jump and self.on_ground:  # only when on ground can character jump
-            self.vel.y = constants.JUMP_POWER
 
         # adjusting screen scroll based on player's position
         if self.pos.x > (constants.SCREEN_WIDTH - constants.SCROLL_THRESH):  # check right side
@@ -106,11 +114,30 @@ class Player:
             self.pos.y = constants.SCROLL_THRESH  # stop player moving when near top
 
         return screen_scroll
+    
+    def is_on_block(self, block):
+        # player's bottom edge
+        player_bottom = self.pos.y + self.size[1] / 2
+
+        # block's top edge
+        block_top = block.center[1] - block.size[1] / 2
+
+        # check if the players bottom is close to the blocks top
+        if abs(player_bottom - block_top) < 5:  # tolerance for inaccuracies
+
+            player_left = self.pos.x - self.size[0] / 2
+            player_right = self.pos.x + self.size[0] / 2
+            block_left = block.center[0] - block.size[0] / 2
+            block_right = block.center[0] + block.size[0] / 2
+
+            if (player_right > block_left and player_left < block_right):
+                return True
+        return False
 
     def reset_speed(self):
-        # Reset the player's speed to the default value
+        # reset the player's speed to the default value
         self.speed = self.default_speed
 
 
-# Example usage
-player = Player(Vector(100, 100))
+# example usage
+# player = Player(Vector(100, 100))
