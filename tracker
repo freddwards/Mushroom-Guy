@@ -31,12 +31,15 @@ checking if player is on top of a block, allowing jumps
 Jessica -
 
 - hours worked:
-4
+7
 
 - milestones achieved -
-got the sprite sheet 
-Basic making the sprite walk 
+got the Sprite sheet 
+basic making the sprite walk 
 Created the sticky moss enemy 
+making sure that when the player is touching the moss their speed slows down 
+making sure lives were lost when touching moss w/jass
+making gameover page when all lives were lost 
 
 Jasleen -
 
