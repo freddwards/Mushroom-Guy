@@ -1,7 +1,7 @@
 Fred -
 
 - hours worked:
-10
+13
 - milestones achieved -
 organisation of project
 basic code setup w/kai
@@ -12,6 +12,7 @@ creation of level class
 loading and drawing tiles on the screen
 created a test level
 added screen scroll
+combined and edited kais collision code to work with tiles
 
 
 Kai -
