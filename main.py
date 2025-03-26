@@ -2,6 +2,7 @@ import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
 import os
 import csv
 import math
+import time
 
 from vector import Vector
 from player import Player
@@ -70,17 +71,35 @@ class Game:
             self.jump = False
 
     def loadImages(self):
-        # Load tilemap images
+        self.tile_list = []
+        
+        # get the absolute path and convert to proper format (fix for images not loading)
+        base_dir = os.path.abspath("assets/tiles")
+        base_uri = f"file:///{base_dir.replace('\\', '/')}"
+        
         for x in range(constants.TILE_TYPES):
-            absolute_path = os.path.abspath(f"assets/tiles/{x}.png")
-            image = simplegui.load_image(absolute_path)
-            self.tile_list.append(image)
+
+            img_uri = f"{base_uri}/{x}.png"
+            print(f"Loading image: {img_uri}")
+            
+            # load the image
+            img = simplegui.load_image(img_uri)
+            
+            # check if the image loaded properly
+            if img.get_width() == 0:
+                print(f"Image {x}.png didn't load properly - using placeholder")
+                # create a placeholder blank image
+                img = simplegui._create_blank_image(constants.TILE_SIZE, constants.TILE_SIZE)
+                img.fill((255, 255, 255))  # white placeholder
+            
+            self.tile_list.append(img)
+            print(f"Loaded tile {x} - Dimensions: {img.get_width()}x{img.get_height()}")
 
     def loadLevel(self):
         for row in range(150): # creating empty 150x150 world_data list
             r = [-1] * 150
             self.world_data.append(r)
-        #loading level data from csv file into world_data
+        # loading level data from csv file into world_data
         with open("levels/level0_data.csv", newline="") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
             for x, row in enumerate(reader):
@@ -91,86 +110,84 @@ class Game:
 class Interaction:
     def __init__(self, game):
         self.game = game
-
+        self.collision_tolerance = 0.1  # small threshold to prevent jittering
 
     def check_and_handle_collisions(self):
-        self.handle_tile_collisions()  # tile collisions
-        # self.handle_moss_collisions()
-
-
-    # def handle_moss_collisions(self):
-    #    for moss in self.game.moss:
-    #        if moss.is_player_on_moss(self.game.player):
-    #            self.game.player.on_moss = True
+        self.handle_tile_collisions()
 
     def handle_tile_collisions(self):
-        self.game.player.on_ground = False  # assume the player is not on the tile
-
+        self.game.player.on_ground = False
+        
         for tile in self.game.level.map_tiles:
             if self.is_colliding_with_tile(self.game.player, tile):
                 self.resolve_tile_collision(self.game.player, tile)
-
-                if self.game.player.is_on_tile(tile):
-                    self.game.player.on_ground = True  # player is on top of the tile
+                self.check_on_ground(self.game.player, tile)
 
     def is_colliding_with_tile(self, player, tile):
-        player_left = player.pos.x - player.size[0] / 2
-        player_right = player.pos.x + player.size[0] / 2
-        player_top = player.pos.y - player.size[1] / 2
-        player_bottom = player.pos.y + player.size[1] / 2
+        # find player bounds
+        player_left = player.pos.x - player.size[0]/2
+        player_right = player.pos.x + player.size[0]/2
+        player_top = player.pos.y - player.size[1]/2
+        player_bottom = player.pos.y + player.size[1]/2
 
-        self.tile_left = tile[1]  - constants.TILE_SIZE / 2 # tile[1] is the x-coordinate of the tile
-        self.tile_right = tile[1] + constants.TILE_SIZE / 2
-        self.tile_top = tile[2] -  constants.TILE_SIZE / 2  # tile[2] is the y-coordinate of the tile
-        self.tile_bottom = tile[2] + constants.TILE_SIZE / 2
+        # find tile bounds
+        tile_left = tile[1] - constants.TILE_SIZE/2
+        tile_right = tile[1] + constants.TILE_SIZE/2
+        tile_top = tile[2] - constants.TILE_SIZE/2
+        tile_bottom = tile[2] + constants.TILE_SIZE/2
 
-        return (player_right > self.tile_left and player_left < self.tile_right and
-                player_bottom > self.tile_top and player_top < self.tile_bottom)
-
+        return (player_right > tile_left and 
+                player_left < tile_right and 
+                player_bottom > tile_top and 
+                player_top < tile_bottom)
 
     def resolve_tile_collision(self, player, tile):
-        overlap_x = min(
-            abs(player.pos.x + player.size[0] / 2 - tile[1]),
-            abs(player.pos.x - player.size[0] / 2 - (tile[1] + constants.TILE_SIZE))
-        )
+        # find bounds with threshold
+        tile_left = tile[1] - constants.TILE_SIZE/2 + self.collision_tolerance
+        tile_right = tile[1] + constants.TILE_SIZE/2 - self.collision_tolerance
+        tile_top = tile[2] - constants.TILE_SIZE/2 + self.collision_tolerance
+        tile_bottom = tile[2] + constants.TILE_SIZE/2 - self.collision_tolerance
 
-        overlap_y = min(
-            abs(player.pos.y + player.size[1] / 2 - tile[2]),
-            abs(player.pos.y - player.size[1] / 2 - (tile[2] + constants.TILE_SIZE))
-        )
+        # find penetration distances
+        penetration_left = (player.pos.x + player.size[0]/2) - tile_left
+        penetration_right = tile_right - (player.pos.x - player.size[0]/2)
+        penetration_top = (player.pos.y + player.size[1]/2) - tile_top
+        penetration_bottom = tile_bottom - (player.pos.y - player.size[1]/2)
 
-        if overlap_x < overlap_y:
-            # horizontal collision
-            if player.pos.x < self.tile_left:
-                player.pos.x = self.tile_left - player.size[0] / 2
-            elif player.pos.x > self.tile_right:
-                player.pos.x = self.tile_right + player.size[0] / 2
+        # find smallest penetration
+        min_penetration = min(penetration_left, penetration_right, 
+                             penetration_top, penetration_bottom)
+
+        # resolve collision based on smallest penetration
+        if min_penetration == penetration_left:
+            # collision from left side
+            player.pos.x = tile_left - player.size[0]/2 - self.collision_tolerance
             player.vel.x = 0
-        else:
-            # vertical collision
-            if player.pos.y < self.tile_top:
-                player.pos.y = self.tile_top - player.size[1] / 2
-                player.on_ground = True
+            
+        elif min_penetration == penetration_right:
+            # collision from right side
+            player.pos.x = tile_right + player.size[0]/2 + self.collision_tolerance
+            player.vel.x = 0
+            
+        elif min_penetration == penetration_top:
+            # collision from top
+            player.pos.y = tile_top - player.size[1]/2 - self.collision_tolerance
+            player.vel.y = 0
+            
+        else:  # penetration_bottom
+            # collision from bottom
+            player.pos.y = tile_bottom + player.size[1]/2 + self.collision_tolerance
+            player.vel.y = 0
 
-
-            else:
-                player.pos.y = self.tile_top + constants.TILE_SIZE + player.size[1] / 2
-                player.vel.y = 0
-
-    def is_on_tile(self, player, tile):
-        player_bottom = player.pos.y + player.size[1] / 2
-
-        if abs(player_bottom - self.tile_top) < 5:  # tolerance for inaccuracies
-            player_left = player.pos.x - player.size[0] / 2
-            player_right = player.pos.x + player.size[0] / 2
-            tile_left = tile[1]
-            tile_right = tile[1] + constants.TILE_SIZE
-
-            if player_right > tile_left and player_left < tile_right:
-                return True
-
-        return False
-
+    def check_on_ground(self, player, tile):
+        # check if the player is on the ground
+        player_bottom = player.pos.y + player.size[1]/2
+        tile_top = tile[2] - constants.TILE_SIZE/2
+        
+        if (abs(player_bottom - tile_top) < 5 and  # Small tolerance
+            player.pos.x + player.size[0]/2 > tile[1] - constants.TILE_SIZE/2 and
+            player.pos.x - player.size[0]/2 < tile[1] + constants.TILE_SIZE/2):
+            player.on_ground = True
 
 # Create frame and start game
 frame = simplegui.create_frame("Mushroom Guy", constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT)
