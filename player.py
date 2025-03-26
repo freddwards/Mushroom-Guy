@@ -1,6 +1,6 @@
 import constants
 import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
-from Scripts.constants import SCROLL_THRESH_Y
+from constants import SCROLL_THRESH_Y
 from vector import Vector
 
 FLOOR = constants.SCREEN_HEIGHT - 11  # temp before map is added
