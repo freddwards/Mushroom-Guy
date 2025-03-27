@@ -7,7 +7,7 @@ import time
 from vector import Vector
 from player import Player
 from level import Level
-from level import Block
+from level import Powerup
 import constants
 from player import Health
 
@@ -22,22 +22,25 @@ class Game:
         self.right = False
         self.left = False
         self.jump = False
+        self.current_level = 0
         self.blocks = []
+        self.powerups = []
+        self.powerup_images = []
         self.moss = []
-
-        # Define world data
-        self.world_data = world_data = []
-        self.loadLevel()
-        self.screen_scroll = [0, 0]
-
         self.tile_list = []
-        self.loadImages()
 
         # Declare player
-        self.player = Player(Vector(200, 150))
+        self.player = Player(Vector(200, 150), self)
+
+        # Define world data
+        self.loadImages()
+        self.world_data = world_data = []
+        self.loadLevel(self.current_level)
+        self.screen_scroll = [0, 0]
+
         self.interaction = Interaction(self)
         # Declare level
-        self.level = Level()
+        self.level = Level(self)
         # Process level data
         self.level.process_data(self.world_data, self.tile_list)
 
@@ -48,6 +51,8 @@ class Game:
         self.update()
         for block in self.blocks:
             block.draw(canvas)
+        for powerup in self.powerups:
+            powerup.draw(canvas)
 
     def update(self):
         # Call move method for player based on player inputs
@@ -70,42 +75,77 @@ class Game:
         elif key == simplegui.KEY_MAP['space']:
             self.jump = False
 
+    def return_to_checkpoint(self):
+        self.world_data = []
+        self.loadLevel(self.current_level)
+        self.screen_scroll = [0, 0]
+        self.level = Level(self)
+        self.level.process_data(self.world_data, self.tile_list)
+
     def loadImages(self):
         self.tile_list = []
+        self.powerup_images = []
         
         # get the absolute path and convert to proper format (fix for images not loading)
-        base_dir = os.path.abspath("assets/tiles")
+        base_dir = os.path.abspath("assets")
         base_uri = f"file:///{base_dir.replace('\\', '/')}"
         
         for x in range(constants.TILE_TYPES):
 
-            img_uri = f"{base_uri}/{x}.png"
-            print(f"Loading image: {img_uri}")
+            tile_uri = f"{base_uri}/tiles/{x}.png"
+            print(f"Loading image: {tile_uri}")
             
             # load the image
-            img = simplegui.load_image(img_uri)
+            img = simplegui.load_image(tile_uri)
+            
+            self.tile_list.append(img)
+            print(f"Loaded tile {x} - Dimensions: {img.get_width()}x{img.get_height()}")
+
+        for x in range(constants.POWERUP_TYPES):
+
+            powerup_uri = f"{base_uri}/powerups/{x}.png"
+            print(f"Loading image: {powerup_uri}")
+            
+            # load the image
+            img = simplegui.load_image(powerup_uri)
             
             # check if the image loaded properly
             if img.get_width() == 0:
                 print(f"Image {x}.png didn't load properly - using placeholder")
                 # create a placeholder blank image
-                img = simplegui._create_blank_image(constants.TILE_SIZE, constants.TILE_SIZE)
-                img.fill((255, 255, 255))  # white placeholder
-            
-            self.tile_list.append(img)
-            print(f"Loaded tile {x} - Dimensions: {img.get_width()}x{img.get_height()}")
+                img = simplegui._create_blank_image(constants.POWERUP_SIZE, constants.POWERUP_SIZE)
+                img.fill((255, 255, 255))
 
-    def loadLevel(self):
+            self.powerup_images.append(img)
+            print(f"Loaded powerup {x} - Dimensions: {img.get_width()}x{img.get_height()}")
+        
+  
+    def loadLevel(self, level):
+        self.world_data = []
+        self.powerups = []
         for row in range(150): # creating empty 150x150 world_data list
             r = [-1] * 150
             self.world_data.append(r)
         # loading level data from csv file into world_data
-        with open("levels/level0_data.csv", newline="") as csvfile:
+        with open(f"levels/level{level}_data.csv", newline="") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
             for x, row in enumerate(reader):
                 for y, tile in enumerate(row):
-                    self.world_data[x][y] = int(tile)
-
+                    if tile == "H":
+                        self.powerups.append(Powerup(self, Vector(y*constants.TILE_SIZE,x*constants.TILE_SIZE), 0))
+                    elif tile == "S":
+                        self.powerups.append(Powerup(self, Vector(y*constants.TILE_SIZE,x*constants.TILE_SIZE), 1))
+                    elif tile == "G":
+                        self.powerups.append(Powerup(self, Vector(y*constants.TILE_SIZE,x*constants.TILE_SIZE), 2))
+                    elif tile == "P":
+                        self.player.pos.x = y*constants.TILE_SIZE
+                        self.player.pos.y = x*constants.TILE_SIZE
+                    elif tile == "20":
+                        self.powerups.append(Powerup(self, Vector(y*constants.TILE_SIZE,x*constants.TILE_SIZE), 3))
+                    elif tile == "22":
+                        self.powerups.append(Powerup(self, Vector(y*constants.TILE_SIZE,x*constants.TILE_SIZE), 4))
+                    else:
+                        self.world_data[x][y] = int(tile)
 
 class Interaction:
     def __init__(self, game):
@@ -114,6 +154,7 @@ class Interaction:
 
     def check_and_handle_collisions(self):
         self.handle_tile_collisions()
+        self.handle_powerup_collisions()
 
     def handle_tile_collisions(self):
         self.game.player.on_ground = False
@@ -122,6 +163,14 @@ class Interaction:
             if self.is_colliding_with_tile(self.game.player, tile):
                 self.resolve_tile_collision(self.game.player, tile)
                 self.check_on_ground(self.game.player, tile)
+
+    def handle_powerup_collisions(self):
+        # collect the powerup and remove it from the list when colliding
+        for powerup in self.game.powerups[:]:
+            if self.is_colliding_with_powerup(self.game.player, powerup):
+                self.game.player.collect_powerup(powerup.type)
+                if powerup.type != "damage" and powerup.type != "ladder":
+                    self.game.powerups.remove(powerup)
 
     def is_colliding_with_tile(self, player, tile):
         # find player bounds
@@ -140,6 +189,25 @@ class Interaction:
                 player_left < tile_right and 
                 player_bottom > tile_top and 
                 player_top < tile_bottom)
+    
+    def is_colliding_with_powerup(self, player, powerup):
+        # find player bounds
+        player_left = player.pos.x - player.size[0]/2
+        player_right = player.pos.x + player.size[0]/2
+        player_top = player.pos.y - player.size[1]/2
+        player_bottom = player.pos.y + player.size[1]/2
+
+        # find powerup bounds
+        powerup_centre = ((powerup.pos.x + constants.POWERUP_SIZE/2),(powerup.pos.y + constants.POWERUP_SIZE/2))
+        powerup_left = powerup.pos.x - constants.POWERUP_SIZE/2
+        powerup_right = powerup.pos.x + constants.POWERUP_SIZE/2
+        powerup_top = powerup.pos.y - constants.POWERUP_SIZE/2
+        powerup_bottom = powerup.pos.y + constants.POWERUP_SIZE/2
+
+        return (player_right > powerup_left and 
+                player_left < powerup_right and 
+                player_bottom > powerup_top and 
+                player_top < powerup_bottom)
 
     def resolve_tile_collision(self, player, tile):
         # find bounds with threshold

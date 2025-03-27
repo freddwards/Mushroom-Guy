@@ -3,7 +3,8 @@ import constants
 
 
 class Level():
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.map_tiles = []
 
     def process_data(self,data,tile_list):
@@ -28,6 +29,9 @@ class Level():
         for tile in self.map_tiles:
             tile[1] += screen_scroll[0] # move tile x coord based on screen scroll
             tile[2] += screen_scroll[1] # move tiles y coord based on screen scroll
+        for powerup in self.game.powerups:
+            powerup.pos.x += screen_scroll[0]
+            powerup.pos.y += screen_scroll[1]
             
 
     def draw(self, canvas):
@@ -42,23 +46,40 @@ class Level():
                 position, 
                 (constants.TILE_SIZE, constants.TILE_SIZE))  # Drawn size
 
-class Block:
-    def __init__(self, center, color="red"):
-
-        self.center = center
+class Powerup:
+    def __init__(self, game, pos, type):
+        self.pos = pos
+        self.game = game
         self.size = (constants.TILE_SIZE, constants.TILE_SIZE)
-        self.color = color
+        if type == 0:
+            self.type = "health"
+            self.img = game.powerup_images[0]
+        elif type == 1:
+            self.type = "speed"
+            self.img = game.powerup_images[1]
+        elif type == 2:
+            self.type = "gravity"
+            self.img = game.powerup_images[2]
+        elif type == 3:
+            self.type = "damage"
+            self.img = game.tile_list[20]
+        elif type == 4:
+            self.type = "ladder"
+            self.img = game.tile_list[22]
+        
 
     def draw(self, canvas):
-
-        # calculate the top-left corner of the block
-        top_left = (self.center[0] - self.size[0] / 2, self.center[1] - self.size[1] / 2)
-        # calculate the four corners of the block
-        points = [
-            top_left,
-            (top_left[0] + self.size[0],  top_left[1]),
-            (top_left[0] + self.size[0], top_left[1] + self.size[1]),
-            (top_left[0], top_left[1] + self.size[1])
-        ]
-        # draw the block
-        canvas.draw_polygon(points, 1, self.color, self.color)
+        canvas.draw_image(self.img,(self.img.get_width() // 2, self.img.get_height() // 2),  (self.img.get_width(), self.img.get_height()), (self.pos.x,self.pos.y), (constants.TILE_SIZE, constants.TILE_SIZE))
+    
+    def collect(self):
+        if self.type == "health":
+            self.game.player.health.add_health(1)
+        elif self.type == "speed":
+            self.game.player.collect_powerup("speed")
+        elif self.type == "gravity":
+            self.game.player.collect_powerup("gravity")
+        elif self.type == "damage":
+            self.game.player.collect_powerup("damage")
+        elif self.type == "ladder":
+            self.game.player.collect_powerup("ladder")
+        self.game.powerups.remove(self)
