@@ -30,6 +30,10 @@ collision checking with blocks
 collision handling with the blocks
 added terminal velocity constant so that collisions do not glitch out
 checking if player is on top of a block, allowing jumps
+added powerups (Health, Speed, Low gravity)
+added death / return to checkpoint
+added lava to trigger death (loss of life)
+made ladders teleport you to the next level
 
 Jessica -
 
