@@ -3,6 +3,7 @@ import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
 from constants import SCROLL_THRESH_Y
 from vector import Vector
 from level import Level
+import os
 
 class Health:
     def __init__(self, max_health, game):
@@ -11,7 +12,11 @@ class Health:
         self.current_health = max_health
 
         # Load heart image directly in the Health class
-        self.heart_image = simplegui.load_image(constants.HEART_IMAGE_URL)
+        base_dir = os.path.abspath("assets")
+        base_uri = f"file:///{base_dir.replace('\\', '/')}"
+        life_uri = f"{base_uri}/ui/life.png"
+
+        self.heart_image = simplegui.load_image(life_uri)
 
     def life_lost(self):
         # Current health decreases by 1
@@ -29,7 +34,7 @@ class Health:
         self.current_health = self.max_health
 
     def draw(self, canvas):
-        if self.heart_image.get_width() > 0:  # Right now the heart lives dont load
+        if self.heart_image.get_width() > 0:
             for i in range(self.current_health):
                 x = constants.SCREEN_WIDTH - (constants.HEART_IMAGE_SIZE[0] + constants.HEART_IMAGE_SPACING) * (i + 1)
                 y = constants.HEART_IMAGE_SPACING + constants.HEART_IMAGE_SIZE[1] / 2
