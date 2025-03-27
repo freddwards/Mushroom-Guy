@@ -1,7 +1,7 @@
 Fred -
 
 - hours worked:
-13
+24
 - milestones achieved -
 organisation of project
 basic code setup w/kai
@@ -13,12 +13,14 @@ loading and drawing tiles on the screen
 created a test level
 added screen scroll
 combined and edited kais collision code to work with tiles
-
+edition of knew tiles into the set ( lava and ladder ) 
+designed and implimented level 1
+designed and implimented level 2
 
 Kai -
 
 - hours worked:
-8
+15
 
 - milestones achieved -
 basic code setup w/Fred
