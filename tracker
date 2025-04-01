@@ -52,7 +52,7 @@ making gameover page when all lives were lost
 Jasleen -
 
 - hours worked:
-8
+14
 
 - milestones achieved -
 basic health bar that decreases using a button for now
@@ -60,4 +60,5 @@ instead of health bar i did 3 lives (rectangles), each life is lost when player 
 instead of rectangles made the lives into hearts 
 made the main menu
 added an option to restart game after game over
+added instructions to the game
 
