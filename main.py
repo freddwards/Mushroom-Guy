@@ -66,7 +66,7 @@ class Game:
                          (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
                          65, "White", "monospace")
 
-        # Draw instructions
+        #draw the instructions
         instructions = [
             "Instructions:",
             "• Use A to move left",
@@ -77,8 +77,8 @@ class Game:
             "Good luck!"
         ]
 
-        # Position instructions below title
-        start_y = constants.SCREEN_HEIGHT // 3 - 50  # Adjust this value as needed
+        #positioning instructions
+        start_y = constants.SCREEN_HEIGHT // 3 - 50
         line_height = 30
 
         for i, instruction in enumerate(instructions):
