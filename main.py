@@ -16,8 +16,8 @@ from player import Health
 
 class Game:
     def __init__(self):
+        self.state = "menu"
         self.running = True
-        self.state = 1
         self.level = 1
         self.right = False
         self.left = False
@@ -44,15 +44,54 @@ class Game:
         # Process level data
         self.level.process_data(self.world_data, self.tile_list)
 
+    def mouse_handler(self, pos):
+        #handles mouse click
+        self.mouse_pos = pos
+        if self.state == "menu":
+            self.state = "game"
+            self.player.health.current_health = self.player.health.max_health
+
     def draw(self, canvas):
-        self.level.update(self.screen_scroll)
-        self.level.draw(canvas)
-        self.player.draw(canvas)
-        self.update()
-        for block in self.blocks:
-            block.draw(canvas)
-        for powerup in self.powerups:
-            powerup.draw(canvas)
+        #according to state (menu, game, game over) it draws the specific canvas
+        if self.state == "menu":
+            self.draw_menu(canvas)
+        elif self.state == "game":
+            self.draw_game(canvas)
+        else:
+            self.draw_game_over(canvas)
+
+    def draw_menu(self, canvas):
+        #draws main menu screen
+        canvas.draw_text("MUSHROOM DUNGEON",
+                         (constants.SCREEN_WIDTH // 2 - 200, constants.SCREEN_HEIGHT // 3 + 50),
+                         50, "White", "monospace")
+
+        #making "click to play" a clickable text
+        text = "CLICK TO PLAY"
+        text_width = frame.get_canvas_textwidth(text, 30, 'monospace')
+        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 + 20
+        text_y = constants.SCREEN_HEIGHT // 2
+        canvas.draw_text(text, (text_x, text_y), 30, "White", "monospace")
+
+    def draw_game(self, canvas):
+        if self.player.health.current_health > 0:
+            self.level.update(self.screen_scroll)
+            self.level.draw(canvas)
+            self.player.draw(canvas)
+            self.update()
+            for block in self.blocks:
+                block.draw(canvas)
+            for powerup in self.powerups:
+                powerup.draw(canvas)
+        else:
+            self.state = "game_over"
+
+    def draw_game_over(self, canvas):
+        #draws the game over screen
+        canvas.draw_text("GAME OVER", (constants.SCREEN_WIDTH // 2 - 200, constants.SCREEN_HEIGHT // 3 + 30),
+                             70, "Red", "monospace")
+        canvas.draw_text("Press R to restart", (constants.SCREEN_WIDTH//2 - 175, constants.SCREEN_HEIGHT//2 - 25),
+                             30, "White", "monospace")
 
     def update(self):
         # Call move method for player based on player inputs
@@ -60,20 +99,31 @@ class Game:
         self.interaction.check_and_handle_collisions()
 
     def keyDown(self, key):  # Handle key presses
-        if key == simplegui.KEY_MAP['d']:
-            self.right = True
-        elif key == simplegui.KEY_MAP['a']:
-            self.left = True
-        elif key == simplegui.KEY_MAP['space']:
-            self.jump = True
+        if self.state == "game":
+            if key == simplegui.KEY_MAP['d']:
+                self.right = True
+            elif key == simplegui.KEY_MAP['a']:
+                self.left = True
+            elif key == simplegui.KEY_MAP['space']:
+                self.jump = True
+        elif self.state == "game_over" and key == simplegui.KEY_MAP['r']:
+            self.state = "game"
+            #restarts the game fully
+            global game
+            game = Game()
+            frame.set_draw_handler(game.draw)
+            frame.set_keydown_handler(game.keyDown)
+            frame.set_keyup_handler(game.keyUp)
+            frame.set_mouseclick_handler(game.mouse_handler)
 
     def keyUp(self, key):  # Handle key releases
-        if key == simplegui.KEY_MAP['d']:
-            self.right = False
-        elif key == simplegui.KEY_MAP['a']:
-            self.left = False
-        elif key == simplegui.KEY_MAP['space']:
-            self.jump = False
+        if self.state == "game":
+            if key == simplegui.KEY_MAP['d']:
+                self.right = False
+            elif key == simplegui.KEY_MAP['a']:
+                self.left = False
+            elif key == simplegui.KEY_MAP['space']:
+                self.jump = False
 
     def return_to_checkpoint(self):
         self.world_data = []
@@ -263,4 +313,5 @@ game = Game()
 frame.set_draw_handler(game.draw)
 frame.set_keydown_handler(game.keyDown)
 frame.set_keyup_handler(game.keyUp)
+frame.set_mouseclick_handler(game.mouse_handler)
 frame.start()
