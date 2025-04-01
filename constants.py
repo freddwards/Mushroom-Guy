@@ -1,3 +1,5 @@
+from PIL.TiffImagePlugin import ROWSPERSTRIP
+
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 GRAVITY = 0.5
@@ -16,3 +18,15 @@ POWERUP_SIZE = 24
 POWERUP_TYPES = 3
 SCROLL_THRESH_X = 300
 SCROLL_THRESH_Y = 250
+
+ROWS = 5
+COLS = 6
+
+PLAYER = {
+    "x": SCREEN_WIDTH // 2,
+    "y": SCREEN_HEIGHT - 40,
+    "vx": 0,
+    "vy": 0,
+    "size": 20,
+    "direction": "left",
+}

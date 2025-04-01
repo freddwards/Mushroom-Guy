@@ -4,6 +4,118 @@ from constants import SCROLL_THRESH_Y
 from vector import Vector
 from level import Level
 import os
+from pathlib import Path
+
+
+
+class Spritesheet:
+    def __init__ (self,image,rows,cols,is_right):
+        self.image = image
+        self.rows = rows
+        self.cols = cols
+        # self.is_right = False
+        self.is_right =  is_right
+
+        self.frame_width = image.get_width()//cols
+        self.frame_height = image.get_height() // rows
+
+        self.frame_count = 0
+        #  row 0 = idle, 1 = walk ,2 = jump
+        self.current_row = 0
+        self.current_col = 0
+
+        self.animation_speed = 5
+        #  checking that the image is there
+        self.loaded = image.get_width()>0
+
+    def draw(self,canvas,x,y):
+        if not self.loaded :
+            # Fallback rectangle if image didn't load
+            size = constants.TILE_SIZE
+            canvas.draw_polygon([
+                (x - size / 2, y - size / 2), (x + size / 2, y - size / 2),
+                (x + size / 2, y + size / 2), (x - size / 2, y + size / 2)
+            ], 1, "Black", "Red")
+            return "image not loaded"
+        else:
+            #  load the image
+            frame_x = self.current_col * self.frame_width
+            frame_y = self.current_row * self.frame_height
+
+            canvas.draw_image(
+                self.image,
+                (frame_x + self.frame_width // 2, frame_y + self.frame_height // 2),
+                (self.frame_width, self.frame_height),
+                (x, y),
+                (self.frame_width * 2, self.frame_height * 2)
+            )
+
+    def next_frame(self, state):
+        self.frame_count += 1
+        self.animation_speed = 5
+
+        if state == "walking":
+            # Walking animation - use row 1 (second row)
+            self.current_row = 1
+            if self.frame_count >= self.animation_speed:
+                self.frame_count = 0
+
+                # Right-facing walking: loop through all columns in reverse
+                if self.is_right :
+                    self.current_col = (self.current_col - 1) % self.cols
+                    # if self.current_col < 0:
+                    #      self.current_col = self.cols - 1
+                else:
+                    # Left-facing walking: loop through all columns except last 2
+                    self.current_col = (self.current_col + 1) % (self.cols - 1)
+                    # self.current_col = (self.current_col + 1) % 4
+
+        elif state == "jumping":
+            # Jumping animation - use row 2 (third row) keep same frame while jumping
+            self.current_row = 2
+            if self.is_right:
+                self.current_col = 2
+            else:
+                self.current_col = 0
+
+        else:  # idle
+            self.current_row = 2
+            if self.is_right:
+                self.current_col = 2
+            else:
+                self.current_col = 0
+
+
+
+
+    def load_image_reliable(path):
+        """Try multiple methods to load an image"""
+        try:
+            abs_path = Path(path).absolute()
+            uri = abs_path.as_uri()
+
+            # Try different loading methods
+            for load_method in [
+                lambda: simplegui.load_image(path),
+                lambda: simplegui.load_image(uri),
+                lambda: simplegui.load_image(f"file://{path}")
+            ]:
+                try:
+                    img = load_method()
+                    if img.get_width() > 0:
+                        print(f"Successfully loaded: {path}")
+                        return img
+                except:
+                    continue
+        except Exception as e:
+            print(f"Error loading {path}: {str(e)}")
+        return None
+
+
+
+
+
+
 
 class Health:
     def __init__(self, max_health, game):
@@ -59,20 +171,84 @@ class Player:
         self.gravity_time = 0
         self.checkpoint = Vector(0, 0)
         self.uptime = 0
+        self.direction = "left"
+        self.animation_counter = 0
+        self.animation_speed = 0
+
+        # loading the sprite image directly
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        sprite_path_l = os.path.join(script_dir, "sprite_sheet", "sheet", "mush-l.png")
+        sprite_path_r = os.path.join(script_dir, "sprite_sheet", "sheet", "mush-r.png")
+
+        player_image_l = Spritesheet.load_image_reliable(sprite_path_l)
+        player_image_r = Spritesheet.load_image_reliable(sprite_path_r)
+
+        self.sprite_left = Spritesheet(player_image_l, constants.ROWS, constants.COLS, is_right=False)
+        self.sprite_right = Spritesheet(player_image_r, constants.ROWS, constants.COLS, is_right=True)
+
+        self.current_sprite = self.sprite_left
+        self.animation_state = "idle"
+        self.animation_speed = 15  # Adjust this value to control animation speed
+
+        self.on_block_counter = 0
+
+        # checking that the sprite sheet can be loaded
+        # print(f"Checking sprite paths:\nLeft: {sprite_path_l} -> Exists: {os.path.exists(sprite_path_l)}\nRight: {sprite_path_r} -> Exists: {os.path.exists(sprite_path_r)}")
+
+    # def update(self):
+    #     # Only change on_block state if condition persists for several frames
+    #     if self.is_on_tile(tile):
+    #         self.on_block_counter += 1
+    #         if self.on_block_counter > 3:  # Require 3 frames of contact
+    #             self.on_block = True
+    #     else:
+    #         self.on_block_counter = 0
+    #         self.on_block = False
 
     def draw(self, canvas):
+
+        if not(self.on_ground or self.on_block):
+            self.animation_state = "jumping"
+        elif abs(self.vel.x) > 0.1:  # If player is moving horizontally
+            self.animation_state = "walking"
+        else:
+            self.animation_state = "idle"
+
+            # # Set the correct sprite based on direction
+            # if (self.direction == "left"):
+            #     self.current_sprite = self.sprite_left
+            #     # self.sprite_left.current_col = 0
+            # else:
+            #     self.current_sprite = self.sprite_right
+            #     # self.sprite_right.current_col = 0
+        self.current_sprite = self.sprite_right if self.direction == "right" else self.sprite_left
+
+        # Update and draw
+        self.current_sprite.next_frame(self.animation_state)
+        self.current_sprite.draw(canvas, self.pos.x, self.pos.y)
+
+        # Update animation frame
+        self.current_sprite.next_frame(self.animation_state)
+        self.current_sprite.draw(canvas, self.pos.x, self.pos.y)
+
+
+
+        # Draw the player
+        # self.current_sprite.draw(canvas, self.pos.x, self.pos.y)
+
+
 
         # update the status of the powerups
         self.update_powerups()
 
-        # Draw a rectangle representing the character
-        canvas.draw_polygon([
-            # drawing a polygon with the character's position and size
-            (self.pos.x - self.size[0] / 2, self.pos.y - self.size[1] / 2),
-            (self.pos.x + self.size[0] / 2, self.pos.y - self.size[1] / 2),
-            (self.pos.x + self.size[0] / 2, self.pos.y + self.size[1] / 2),
-            (self.pos.x - self.size[0] / 2, self.pos.y + self.size[1] / 2)
-        ], 1, "Black", "Red")
+        # # Draw a rectangle representing the character
+        # canvas.draw_polygon([
+        #     # drawing a polygon with the character's position and size
+        #     (self.pos.x - self.size[0] / 2, self.pos.y - self.size[1] / 2),
+        #     (self.pos.x + self.size[0] / 2, self.pos.y - self.size[1] / 2),
+        #     (self.pos.x + self.size[0] / 2, self.pos.y + self.size[1] / 2),
+        #     (self.pos.x - self.size[0] / 2, self.pos.y + self.size[1] / 2)
+        # ], 1, "Black", "Red")
 
         # Draws the player's health
         self.health.draw(canvas)
@@ -114,6 +290,14 @@ class Player:
     def move(self, left, right, jump):
         screen_scroll = [0, 0]
 
+        self.vel.x = 0  # Reset horizontal velocity each frame
+        if left:
+            self.vel.x = -self.speed
+            self.direction = "left"  # This is crucial for animation
+        elif right:
+            self.vel.x = self.speed
+            self.direction = "right"
+
         if (self.on_ground) == False:
             self.vel.y += self.gravity
         elif jump and (self.on_ground):  # only when on ground can character jump
@@ -153,6 +337,15 @@ class Player:
             screen_scroll[1] = constants.SCROLL_THRESH_Y - self.pos.y
             self.pos.y = constants.SCROLL_THRESH_Y  # stop player moving when near top
 
+        if self.on_ground or self.on_block:
+            self.vel.x *= 0.8  # Friction factor
+
+            # Cap minimum velocity to prevent micro-movements
+        if abs(self.vel.x) < 0.1:
+            self.vel.x = 0
+        if abs(self.vel.y) < 0.1:
+            self.vel.y = 0
+
         return screen_scroll
 
     def is_on_tile(self, tile):
@@ -162,13 +355,15 @@ class Player:
         tile_top = tile[2]
 
         # check if the players bottom is close to the tiles top
-        if abs(player_bottom - tile_top) < 5: # tolerance for inaccuracies
+        if abs(player_bottom - tile_top) < 15: # tolerance for inaccuracies
             player_left = self.pos.x - self.size[0] / 2
             player_right = self.pos.x + self.size[0] / 2
             tile_left = tile[1]
             tile_right = tile[1] + constants.TILE_SIZE
 
             if player_right > tile_left and player_left < tile_right:
+                self.pos.y = tile_top - self.size[1] / 2
+                self.vel.y = 0
                 return True
         return False
 
