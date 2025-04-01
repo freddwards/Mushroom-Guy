@@ -63,15 +63,36 @@ class Game:
     def draw_menu(self, canvas):
         #draws main menu screen
         canvas.draw_text("MUSHROOM DUNGEON",
-                         (constants.SCREEN_WIDTH // 2 - 200, constants.SCREEN_HEIGHT // 3 + 50),
-                         50, "White", "monospace")
+                         (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
+                         65, "White", "monospace")
+
+        # Draw instructions
+        instructions = [
+            "Instructions:",
+            "• Use A to move left",
+            "• Use D to move right",
+            "• Space to jump",
+            "• Collect powerups to gain abilities",
+            "• Goal is to navigate the cave till the end",
+            "Good luck!"
+        ]
+
+        # Position instructions below title
+        start_y = constants.SCREEN_HEIGHT // 3 - 50  # Adjust this value as needed
+        line_height = 30
+
+        for i, instruction in enumerate(instructions):
+            y_pos = start_y + (i * line_height)
+            canvas.draw_text(instruction,
+                             (constants.SCREEN_WIDTH // 2 - 215, y_pos),
+                             24, "White", "monospace")
 
         #making "click to play" a clickable text
         text = "CLICK TO PLAY"
         text_width = frame.get_canvas_textwidth(text, 30, 'monospace')
-        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 + 20
-        text_y = constants.SCREEN_HEIGHT // 2
-        canvas.draw_text(text, (text_x, text_y), 30, "White", "monospace")
+        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 25
+        text_y = constants.SCREEN_HEIGHT // 2 + 100
+        canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
 
     def draw_game(self, canvas):
         if self.player.health.current_health > 0:
