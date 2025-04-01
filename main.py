@@ -11,6 +11,7 @@ from moss import Moss
 import constants
 
 
+
 class Game:
     def __init__(self):
         self.running = True
