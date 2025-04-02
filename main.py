@@ -70,19 +70,6 @@ class Game:
                          (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
                          65, "White", "monospace")
 
-
-        #making "click to play" a clickable text
-        text = "CLICK TO PLAY"
-        text_width = frame.get_canvas_textwidth(text, 30, 'monospace')
-        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 25
-        text_y = constants.SCREEN_HEIGHT // 2 + 100
-        canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
-
-    def draw_instructins(self,canvas):
-        canvas.draw_text("INSTRUCTIONS",
-                         (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
-                         65, "White", "monospace")
-
         # Draw instructions
         instructions = [
             "Instructions:",
@@ -104,13 +91,12 @@ class Game:
                              (constants.SCREEN_WIDTH // 2 - 215, y_pos),
                              24, "White", "monospace")
 
-        # making "click to play" a clickable text
+        #making "click to play" a clickable text
         text = "CLICK TO PLAY"
         text_width = frame.get_canvas_textwidth(text, 30, 'monospace')
-        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 20
+        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 25
         text_y = constants.SCREEN_HEIGHT // 2 + 100
         canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
-
 
     def draw_game_over(self, canvas):
         #draws the game over screen
