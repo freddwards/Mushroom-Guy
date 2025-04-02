@@ -40,15 +40,20 @@ made ladders teleport you to the next level
 Jessica -
 
 - hours worked:
-7
+21
 
 - milestones achieved -
-got the Sprite sheet 
-basic making the sprite walk 
+finding a Sprite sheet 
+basic, making the sprite walk 
 Created the sticky moss enemy 
 making sure that when the player is touching the moss their speed slows down 
 making sure lives were lost when touching moss w/jass
-making gameover page when all lives were lost 
+making gameover page when all lives were lost w/jass
+making a new canvas for the instructions page w/jass
+loading the sprite image
+making the walk cycle for the sprite 
+change the animations based on the players movement 
+finding and adding background for the game 
 
 Jasleen -
 
