@@ -47,7 +47,7 @@ class Spritesheet:
                 (frame_x + self.frame_width // 2, frame_y + self.frame_height // 2),
                 (self.frame_width, self.frame_height),
                 (x, y),
-                (self.frame_width * 2, self.frame_height * 1.1)
+                (self.frame_width * 1.5, self.frame_height * 1.1)
             )
 
     def next_frame(self, state):
@@ -191,9 +191,10 @@ class Player:
         else:
             self.animation_state = "idle"
 
-
-
-        self.current_sprite = self.sprite_right if self.direction == "right" else self.sprite_left
+        if self.direction == "right":
+            self.current_sprite = self.sprite_right
+        else:
+            self.current_sprite = self.sprite_left
 
         # Update and draw
         self.current_sprite.next_frame(self.animation_state)

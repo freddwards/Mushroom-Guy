@@ -44,6 +44,8 @@ class Game:
         # Process level data
         self.level.process_data(self.world_data, self.tile_list)
 
+
+
     def mouse_handler(self, pos):
 
 
@@ -123,6 +125,7 @@ class Game:
                              30, "White", "monospace")
 
     def draw_game(self, canvas):
+
         if self.player.health.current_health > 0:
             self.level.update(self.screen_scroll)
             self.level.draw(canvas)

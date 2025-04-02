@@ -1,11 +1,40 @@
 import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
 import constants
+import os
 
 
 class Level():
     def __init__(self, game):
         self.game = game
         self.map_tiles = []
+
+        self.background_img = None
+        self.load_background()
+        self.background_size = (constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT)  # Added size
+
+
+    def load_background(self):
+        #  loading the background image
+        try:
+            # Loading the image from background folder
+            base_dir = os.path.abspath("background")
+            base_uri = f"file:///{base_dir.replace('\\', '/')}"
+            background_uri = f"{base_uri}/background.png"
+
+            # print(f"Loading background: {background_uri}")
+            self.background_img = simplegui.load_image(background_uri)
+
+
+            if self.background_img.get_width() == 0:
+                print("Background image failed to load")
+                self.background_img = None
+            else:
+                print(
+                    f"Background loaded successfully. Dimensions: {self.background_img.get_width()}x{self.background_img.get_height()}")
+
+        except Exception as e:
+            print(f"Error loading background: {e}")
+            self.background_img = None
 
     def process_data(self,data,tile_list):
         self.level_length = len(data)
@@ -15,8 +44,8 @@ class Level():
                 if tile < 0:
                     continue
                 image = tile_list[tile]
-                image_width = image.get_width()
-                image_height = image.get_height()
+                # image_width = image.get_width()
+                # image_height = image.get_height()
                 image_x = x * constants.TILE_SIZE
                 image_y = y * constants.TILE_SIZE
                 tile_data = [image, image_x, image_y]
@@ -35,6 +64,16 @@ class Level():
             
 
     def draw(self, canvas):
+        if self.background_img:
+            canvas.draw_image(
+                self.background_img,
+                (self.background_img.get_width() // 2, self.background_img.get_height() // 2),  # Source center
+                (self.background_img.get_width(), self.background_img.get_height()),  # Source size
+                (constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT // 2),  # Destination center
+                (constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT)  # Destination size (full screen)
+            )
+
+
         for tile in self.map_tiles:
             image = tile[0]
             position = (tile[1], tile[2])
