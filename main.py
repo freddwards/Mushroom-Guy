@@ -48,6 +48,8 @@ class Game:
         #handles mouse click
         self.mouse_pos = pos
         if self.state == "menu":
+            self.state = "instruct"
+        elif self.state == "instruct":
             self.state = "game"
             self.player.health.current_health = self.player.health.max_health
 
@@ -57,12 +59,27 @@ class Game:
             self.draw_menu(canvas)
         elif self.state == "game":
             self.draw_game(canvas)
+        elif self.state == "instruct":
+            self.draw_instructins(canvas)
         else:
             self.draw_game_over(canvas)
 
     def draw_menu(self, canvas):
         #draws main menu screen
         canvas.draw_text("MUSHROOM DUNGEON",
+                         (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
+                         65, "White", "monospace")
+
+
+        #making "click to play" a clickable text
+        text = "CLICK TO PLAY"
+        text_width = frame.get_canvas_textwidth(text, 30, 'monospace')
+        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 25
+        text_y = constants.SCREEN_HEIGHT // 2 + 100
+        canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
+
+    def draw_instructins(self,canvas):
+        canvas.draw_text("INSTRUCTIONS",
                          (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
                          65, "White", "monospace")
 
@@ -87,12 +104,13 @@ class Game:
                              (constants.SCREEN_WIDTH // 2 - 215, y_pos),
                              24, "White", "monospace")
 
-        #making "click to play" a clickable text
+        # making "click to play" a clickable text
         text = "CLICK TO PLAY"
         text_width = frame.get_canvas_textwidth(text, 30, 'monospace')
-        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 25
+        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 20
         text_y = constants.SCREEN_HEIGHT // 2 + 100
         canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
+
 
     def draw_game_over(self, canvas):
         #draws the game over screen
