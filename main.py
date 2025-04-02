@@ -45,6 +45,7 @@ class Game:
         self.level.process_data(self.world_data, self.tile_list)
 
     def mouse_handler(self, pos):
+
         #handles mouse click
         self.mouse_pos = pos
         if self.state == "menu":
