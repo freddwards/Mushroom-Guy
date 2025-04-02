@@ -46,6 +46,7 @@ class Game:
 
     def mouse_handler(self, pos):
 
+
         #handles mouse click
         self.mouse_pos = pos
         if self.state == "menu":
