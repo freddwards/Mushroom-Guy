@@ -62,13 +62,27 @@ class Game:
         elif self.state == "game":
             self.draw_game(canvas)
         elif self.state == "instruct":
-            self.draw_instructins(canvas)
+            self.draw_instructions(canvas)
         else:
             self.draw_game_over(canvas)
 
     def draw_menu(self, canvas):
         #draws main menu screen
         canvas.draw_text("MUSHROOM DUNGEON",
+                         (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
+                         65, "White", "monospace")
+
+
+        #making "click to play" a clickable text
+        text = "CLICK TO PLAY"
+        text_width = frame.get_canvas_textwidth(text, 30, 'monospace')
+        text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 25
+        text_y = constants.SCREEN_HEIGHT // 2 + 100
+        canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
+
+    def draw_instructions(self, canvas):
+        #draws main menu screen
+        canvas.draw_text("INSTRUCTIONS",
                          (constants.SCREEN_WIDTH // 2 - 275, constants.SCREEN_HEIGHT // 3 - 100),
                          65, "White", "monospace")
 
@@ -99,6 +113,7 @@ class Game:
         text_x = constants.SCREEN_WIDTH // 2 - text_width // 2 - 25
         text_y = constants.SCREEN_HEIGHT // 2 + 100
         canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
+
 
     def draw_game_over(self, canvas):
         #draws the game over screen
