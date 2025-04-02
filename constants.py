@@ -27,6 +27,6 @@ PLAYER = {
     "y": SCREEN_HEIGHT - 40,
     "vx": 0,
     "vy": 0,
-    "size": 20,
+    "size": 5,
     "direction": "left",
 }

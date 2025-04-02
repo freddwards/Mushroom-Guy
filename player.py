@@ -24,7 +24,7 @@ class Spritesheet:
         self.current_row = 0
         self.current_col = 0
 
-        self.animation_speed = 5
+        self.animation_speed = 100
         #  checking that the image is there
         self.loaded = image.get_width()>0
 
@@ -36,7 +36,7 @@ class Spritesheet:
                 (x - size / 2, y - size / 2), (x + size / 2, y - size / 2),
                 (x + size / 2, y + size / 2), (x - size / 2, y + size / 2)
             ], 1, "Black", "Red")
-            return "image not loaded"
+            # return "image not loaded"
         else:
             #  load the image
             frame_x = self.current_col * self.frame_width
@@ -47,36 +47,25 @@ class Spritesheet:
                 (frame_x + self.frame_width // 2, frame_y + self.frame_height // 2),
                 (self.frame_width, self.frame_height),
                 (x, y),
-                (self.frame_width * 2, self.frame_height * 2)
+                (self.frame_width * 2, self.frame_height * 1.1)
             )
 
     def next_frame(self, state):
-        self.frame_count += 1
-        self.animation_speed = 10
+
+        self.animation_speed = 5
 
         if state == "walking":
             # Walking animation - use row 1 (second row)
-            self.current_row = 1
+            print(self.frame_count <= self.animation_speed)
             if self.frame_count >= self.animation_speed:
-                self.frame_count = 0
-
-                # Right-facing walking: loop through all columns in reverse
-                if self.is_right :
-                    self.current_col = (self.current_col - 1) % self.cols
-                    # if self.current_col < 0:
-                    #      self.current_col = self.cols - 1
+                self.current_row = 1
+                if self.is_right:
+                    self.current_col = (self.current_col - 1) % (self.cols - 2)
                 else:
-                    # Left-facing walking: loop through all columns except last 2
-                    self.current_col = (self.current_col + 1) % (self.cols - 1)
-                    # self.current_col = (self.current_col + 1) % 4
+                    self.current_col = (self.current_col + 1) % (self.cols - 2)
 
-        elif state == "jumping":
-            # Jumping animation - use row 2 (third row) keep same frame while jumping
-            self.current_row = 2
-            if self.is_right:
-                self.current_col = 2
-            else:
-                self.current_col = 0
+                self.frame_count = 0
+            self.frame_count += 1
 
         else:  # idle
             self.current_row = 2
@@ -84,7 +73,6 @@ class Spritesheet:
                 self.current_col = 2
             else:
                 self.current_col = 0
-
 
 
 
@@ -172,7 +160,7 @@ class Player:
         self.checkpoint = Vector(0, 0)
         self.uptime = 0
         self.direction = "left"
-        self.animation_counter = 0
+
         self.animation_speed = 0
 
         # loading the sprite image directly
@@ -192,65 +180,27 @@ class Player:
 
         self.on_block_counter = 0
 
-        # checking that the sprite sheet can be loaded
-        # print(f"Checking sprite paths:\nLeft: {sprite_path_l} -> Exists: {os.path.exists(sprite_path_l)}\nRight: {sprite_path_r} -> Exists: {os.path.exists(sprite_path_r)}")
 
-    # def update(self):
-    #     # Only change on_block state if condition persists for several frames
-    #     if self.is_on_tile(tile):
-    #         self.on_block_counter += 1
-    #         if self.on_block_counter > 3:  # Require 3 frames of contact
-    #             self.on_block = True
-    #     else:
-    #         self.on_block_counter = 0
-    #         self.on_block = False
 
     def draw(self, canvas):
 
-        if not(self.on_ground or self.on_block):
-            self.animation_state = "jumping"
-        elif abs(self.vel.x) > 0.1:  # If player is moving horizontally
+
+        if abs(self.vel.x) > 0.1:
+
             self.animation_state = "walking"
         else:
             self.animation_state = "idle"
 
-            # # Set the correct sprite based on direction
-            # if (self.direction == "left"):
-            #     self.current_sprite = self.sprite_left
-            #     # self.sprite_left.current_col = 0
-            # else:
-            #     self.current_sprite = self.sprite_right
-            #     # self.sprite_right.current_col = 0
+
+
         self.current_sprite = self.sprite_right if self.direction == "right" else self.sprite_left
 
         # Update and draw
         self.current_sprite.next_frame(self.animation_state)
         self.current_sprite.draw(canvas, self.pos.x, self.pos.y)
 
-        # Update animation frame
-        self.current_sprite.next_frame(self.animation_state)
-        self.current_sprite.draw(canvas, self.pos.x, self.pos.y)
-
-
-
-        # Draw the player
-        # self.current_sprite.draw(canvas, self.pos.x, self.pos.y)
-
-
-
-        # update the status of the powerups
         self.update_powerups()
 
-        # # Draw a rectangle representing the character
-        # canvas.draw_polygon([
-        #     # drawing a polygon with the character's position and size
-        #     (self.pos.x - self.size[0] / 2, self.pos.y - self.size[1] / 2),
-        #     (self.pos.x + self.size[0] / 2, self.pos.y - self.size[1] / 2),
-        #     (self.pos.x + self.size[0] / 2, self.pos.y + self.size[1] / 2),
-        #     (self.pos.x - self.size[0] / 2, self.pos.y + self.size[1] / 2)
-        # ], 1, "Black", "Red")
-
-        # Draws the player's health
         self.health.draw(canvas)
 
         self.uptime += 1
