@@ -52,7 +52,7 @@ class Spritesheet:
 
     def next_frame(self, state):
         self.frame_count += 1
-        self.animation_speed = 5
+        self.animation_speed = 10
 
         if state == "walking":
             # Walking animation - use row 1 (second row)
