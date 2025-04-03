@@ -47,8 +47,6 @@ class Game:
 
 
     def mouse_handler(self, pos):
-
-
         #handles mouse click
         self.mouse_pos = pos
         if self.state == "menu":
@@ -116,7 +114,6 @@ class Game:
         text_y = constants.SCREEN_HEIGHT // 2 + 100
         canvas.draw_text(text, (text_x, text_y), 35, "White", "monospace")
 
-
     def draw_game_over(self, canvas):
         #draws the game over screen
         canvas.draw_text("GAME OVER", (constants.SCREEN_WIDTH // 2 - 200, constants.SCREEN_HEIGHT // 3 + 30),
@@ -137,13 +134,6 @@ class Game:
                 powerup.draw(canvas)
         else:
             self.state = "game_over"
-
-    def draw_game_over(self, canvas):
-        #draws the game over screen
-        canvas.draw_text("GAME OVER", (constants.SCREEN_WIDTH // 2 - 200, constants.SCREEN_HEIGHT // 3 + 30),
-                             70, "Red", "monospace")
-        canvas.draw_text("Press R to restart", (constants.SCREEN_WIDTH//2 - 175, constants.SCREEN_HEIGHT//2 - 25),
-                             30, "White", "monospace")
 
     def update(self):
         # Call move method for player based on player inputs
